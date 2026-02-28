@@ -4,6 +4,12 @@ import random
 import webbrowser
 import datetime
 from plyer import notification
+import pyautogui
+import wikipedia
+import pywhatkit as pwk
+import user_config
+import smtplib, ssl
+import openai_request as ai
 
 # -------- Text To Speech Setup --------
 def speak(audio):
@@ -107,6 +113,60 @@ def main_process():
                 title="Today's work",
                 message=task
             )
+        
+        elif "open youtube" in request:
+            webbrowser.open("https://www.youtube.com")
+
+        elif "open" in request:
+            query = request.replace("open", "")
+            pyautogui.press("super")
+            pyautogui.typewrite(query)
+            pyautogui.sleep(2)
+            pyautogui.press("enter")
+        
+        elif "wikipedia" in request:
+            request = request.replace("jarvis ", "")
+            request = request.replace("search wikipedia ", "")
+            print(request)
+            result = wikipedia.summary(request, sentences=2)
+            print(result)
+            speak(result)
+        
+        elif "search google" in request:
+            request = request.replace("jarvis ", "")
+            request = request.replace("search google ", "")
+            webbrowser.open("https://www.google.com/search?q=" + request)
+        
+        elif "send whatsapp message" in request:
+            pwk.sendwhatmsg("+910123456789", "Hi, what's up?", 2,3, 30)
+            speak("Message sent successfully")
+        
+        # elif "send mail" in request:
+        #     pwk.send_mail("absdolly@254gmail.com", user_config.user_pass, "For", "This is a test email", "xyz@254gmail.com")
+        #     speak("Email sent successfully")
+        
+        elif "send email" in request:
+            s = smtplib.SMTP('smtp.gmail.com', 587)
+            s.starttls()
+            s.login("absdolly@254gmail.com", user_config.gmail_password)
+            message = """
+                This is the message.
+
+                Thanks by Kode Gurukul.
+
+                """
+            s.sendmail("absdolly@254gmail.com", "xyz@254gmail.com", message)
+            s.quit()
+            speak("Email sent")
+        
+        elif "ask gpt" in request:
+            request = request.replace("jarvis ", "")
+            request = request.replace("search gpt ", "")
+            print(request)
+            response = ai.send_request_to_gpt(request)
+            print(response)
+            speak(response)
+        
         elif "exit" in request or "stop" in request:
             speak("Goodbye")
             break

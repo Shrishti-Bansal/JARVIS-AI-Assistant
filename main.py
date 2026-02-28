@@ -3,19 +3,23 @@ import speech_recognition as sr
 import random
 import webbrowser
 import datetime
+from plyer import notification
 
 # -------- Text To Speech Setup --------
-engine = pyttsx3.init()
-voices = engine.getProperty('voices')
-engine.setProperty('voice', voices[0].id)
-engine.setProperty('rate', 185)
-
-
 def speak(audio):
     print("Assistant:", audio)
+   
+    engine = pyttsx3.init()
+    voices = engine.getProperty('voices')
+    
+    engine.setProperty('voice', voices[1].id)
+    engine.setProperty('rate', 185)
+    engine.setProperty('volume', 1.0)
+
+
     engine.say(audio)
     engine.runAndWait()
-
+    engine.stop()
 
 # -------- Speech Recognition --------
 def command():
@@ -25,7 +29,7 @@ def command():
         r = sr.Recognizer()
         with sr.Microphone() as source:
             print("Say something...")
-            #r.adjust_for_ambient_noise(source, duration=1)
+            r.adjust_for_ambient_noise(source, duration=1)
             audio = r.listen(source)
 
         try:
@@ -35,7 +39,8 @@ def command():
 
         except Exception as e:
             print("Sorry, I did not understand.")
-    
+            return None
+   
     return content
 
         
@@ -44,11 +49,13 @@ def command():
 # -------- Main Assistant --------
 def main_process():
 
-    
+    speak("Jarvis activated")
 
     while True:
-        request = command().lower()
-
+        request = command()
+        if request is None:
+            continue
+        request = request.lower()
 
         if "hello" in request:
             speak("Welcome, how are you doing?")
@@ -66,12 +73,40 @@ def main_process():
 
         elif "time" in request:
             now_time = datetime.datetime.now().strftime("%H:%M")
-            speak("Current time is " + now_time)
+            speak("Current time is " + str(now_time))
 
         elif "date" in request:
             now_date = datetime.datetime.now().strftime("%d/%m/%Y")
-            speak("Current date is " + now_date)
+            speak("Current date is " + str(now_date))
+        
+        elif "new task" in request:
+            task = request.replace("new task", "").strip()
+            if task!="":
+                speak("Adding task:" + task)
+                with open("todo.txt", "a") as file:
+                    file.write(task + "\n")
+        elif "show tasks" in request:
+            try:
+                with open("todo.txt", "r") as file:
+                    tasks = file.readlines()
 
+                if not tasks:
+                    speak("No tasks available")
+                else:
+                    speak("Here are your tasks")
+                    for task in tasks:
+                        speak(task)
+
+            except FileNotFoundError:
+                speak("Task list not found")
+        
+        elif "show work" in request:
+            with open("todo.txt", "r") as file:
+                    task=file.read()
+            notification.notify(
+                title="Today's work",
+                message=task
+            )
         elif "exit" in request or "stop" in request:
             speak("Goodbye")
             break
